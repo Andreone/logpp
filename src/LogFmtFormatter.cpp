@@ -118,7 +118,7 @@ namespace logpp
 
             void setPostFormat(OnFormat onFormat)
             {
-                m_onPreFormat = std::move(onFormat);
+                m_onPostFormat = std::move(onFormat);
             }
 
             void format(std::string_view name, LogLevel level, const EventLogBuffer& buffer, fmt::memory_buffer& out) const override
