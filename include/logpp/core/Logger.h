@@ -9,6 +9,7 @@
 #include "logpp/utils/thread.h"
 
 #include <atomic>
+#include <memory>
 
 namespace logpp
 {
@@ -68,7 +69,7 @@ namespace logpp
             buffer.writeText(text);
             buffer.writeFields(std::forward<Fields>(fields)...);
 
-            auto sink = std::atomic_load_explicit(&m_sink, std::memory_order_acquire);
+            auto sink = m_sink.load(std::memory_order_acquire);
             sink->sink(name(), level, buffer);
         }
 
@@ -86,7 +87,7 @@ namespace logpp
             buffer.writeSourceLocation(location);
             buffer.writeFields(std::forward<Fields>(fields)...);
 
-            auto sink = std::atomic_load_explicit(&m_sink, std::memory_order_acquire);
+            auto sink = m_sink.load(std::memory_order_acquire);
             sink->sink(name(), level, buffer);
         }
 
@@ -122,7 +123,7 @@ namespace logpp
 
         std::shared_ptr<sink::Sink> sink() const
         {
-            return std::atomic_load_explicit(&m_sink, std::memory_order_acquire);
+            return m_sink.load(std::memory_order_acquire);
         }
 
         std::string_view name() const
@@ -142,7 +143,7 @@ namespace logpp
 
         void setSink(std::shared_ptr<sink::Sink> sink)
         {
-            std::atomic_exchange(&m_sink, std::move(sink));
+            m_sink.exchange(std::move(sink), std::memory_order_seq_cst);
         }
 
         bool is(LogLevel lvl) const
@@ -154,7 +155,7 @@ namespace logpp
         std::string m_name;
         std::atomic<LogLevel> m_level;
 
-        std::shared_ptr<sink::Sink> m_sink;
+        std::atomic<std::shared_ptr<sink::Sink>> m_sink;
 
         static thread_utils::id getThreadId()
         {
