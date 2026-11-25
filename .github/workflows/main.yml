@@ -13,14 +13,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - cc: gcc-9
-            cxx: g++-9
-            packages: gcc-9 g++-9
-          - cc: clang-10
-            cxx: clang++-10
-            packages: clang-10
+          - cc: gcc-13
+            cxx: g++-13
+            packages: gcc-13 g++-13
+          - cc: clang-18
+            cxx: clang++-18
+            packages: clang-18
           
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Ubuntu - ${{ matrix.cc }}
     env:
       CC: ${{ matrix.cc }}
@@ -47,12 +47,12 @@ jobs:
       - name: Fetch dependencies
         working-directory: ${{github.workspace}}/build-${{ matrix.cc }}
         shell: bash
-        run: conan install .. --output-folder=. -o "&:build_tests=True" -s compiler.cppstd=17 --build=missing
+        run: conan install .. --output-folder=. -o "&:build_tests=True" -s compiler.cppstd=20 --build=missing
     
       - name: Build
         working-directory: ${{github.workspace}}/build-${{ matrix.cc }}
         shell: bash
-        run: conan build .. --output-folder=. -o "&:build_tests=True" -s compiler.cppstd=17
+        run: conan build .. --output-folder=. -o "&:build_tests=True" -s compiler.cppstd=20
   build-windows:
     runs-on: windows-latest
     name: Windows - msvc
@@ -74,8 +74,8 @@ jobs:
 
       - name: Fetch dependencies
         working-directory: ${{github.workspace}}/build-msvc
-        run: conan install .. --output-folder=. -o "&:build_tests=True" -s compiler.cppstd=17 --build=missing
+        run: conan install .. --output-folder=. -o "&:build_tests=True" -s compiler.cppstd=20 --build=missing
 
       - name: Build
         working-directory: ${{github.workspace}}/build-msvc
-        run: conan build .. --output-folder=. -o "&:build_tests=True" -s compiler.cppstd=17
+        run: conan build .. --output-folder=. -o "&:build_tests=True" -s compiler.cppstd=20

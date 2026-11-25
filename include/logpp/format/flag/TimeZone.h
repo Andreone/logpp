@@ -29,5 +29,4 @@ namespace logpp::tz
             return Clock::from_time_t(date_utils::timegm(&tm));
         }
     };
-
 }

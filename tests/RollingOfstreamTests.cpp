@@ -1,7 +1,6 @@
 #include "logpp/sinks/file/RollingOfstream.h"
 
 #include "logpp/core/config.h"
-#include "logpp/core/Date.h"
 #include "logpp/utils/file.h"
 
 #include "TemporaryFile.h"
@@ -10,12 +9,12 @@
 
 #include <chrono>
 #include <memory>
+#include <sstream>
 #include <vector>
 
 using namespace logpp;
 
 using namespace std::chrono;
-using namespace date;
 
 using namespace std::string_view_literals;
 
@@ -116,7 +115,7 @@ struct TestCase
     {
         using TimeDuration = decltype(hours { 0 } + minutes { 0 } + seconds { 0 });
 
-        date::year_month_day ymd;
+        std::chrono::year_month_day ymd;
         TimeDuration time;
         bool expected;
     };
@@ -151,16 +150,20 @@ struct RollingTestCase : TestCase
         std::filebuf buf;
         for (const auto& testCase : this->cases)
         {
-            auto days = static_cast<date::sys_days>(testCase.ymd);
-            auto time = make_time(testCase.time);
+            auto days = static_cast<std::chrono::sys_days>(testCase.ymd);
+            auto time = hh_mm_ss { testCase.time };
 
             auto tp = typename FrozenClock::time_point { days + testCase.time };
             FrozenClock::setNow(tp);
 
             ASSERT_EQ(strategy.apply(&buf), testCase.expected)
                 << " RollingStrategy did not apply as expected."
-                << " name=\"" << this->name << "\" date=" << testCase.ymd
-                << " time=" << time;
+                << " name=\"" << this->name << "\" date="
+                << static_cast<int>(testCase.ymd.year()) << '-'
+                << static_cast<unsigned>(testCase.ymd.month()) << '-'
+                << static_cast<unsigned>(testCase.ymd.day())
+                << " time=" << time.hours().count() << ':'
+                << time.minutes().count() << ':' << time.seconds().count();
         }
     }
 };
@@ -198,144 +201,144 @@ TEST(RollingOfstreamTests, should_roll_by_time)
             "Rolling every minute precise",
             RollEvery { PreciseInterval { minutes(1) }, FrozenClock {} },
             {
-                { jan / 29 / 2021, hours { 11 } + minutes { 50 } + seconds { 20 }, false },
-                { jan / 29 / 2021, hours { 11 } + minutes { 50 } + seconds { 50 }, false },
-                { jan / 29 / 2021, hours { 11 } + minutes { 51 } + seconds { 10 }, false },
+                { January / 29 / 2021, hours { 11 } + minutes { 50 } + seconds { 20 }, false },
+                { January / 29 / 2021, hours { 11 } + minutes { 50 } + seconds { 50 }, false },
+                { January / 29 / 2021, hours { 11 } + minutes { 51 } + seconds { 10 }, false },
                 // ROLL
-                { jan / 29 / 2021, hours { 11 } + minutes { 51 } + seconds { 20 }, true },
-                { jan / 29 / 2021, hours { 11 } + minutes { 51 } + seconds { 50 }, false },
-                { jan / 29 / 2021, hours { 11 } + minutes { 52 } + seconds { 10 }, false },
+                { January / 29 / 2021, hours { 11 } + minutes { 51 } + seconds { 20 }, true },
+                { January / 29 / 2021, hours { 11 } + minutes { 51 } + seconds { 50 }, false },
+                { January / 29 / 2021, hours { 11 } + minutes { 52 } + seconds { 10 }, false },
                 // ROLL
-                { jan / 29 / 2021, hours { 11 } + minutes { 52 } + seconds { 30 }, true },
-                { jan / 29 / 2021, hours { 11 } + minutes { 52 } + seconds { 55 }, false },
+                { January / 29 / 2021, hours { 11 } + minutes { 52 } + seconds { 30 }, true },
+                { January / 29 / 2021, hours { 11 } + minutes { 52 } + seconds { 55 }, false },
                 // ROLL
-                { jan / 30 / 2021, hours { 9 } + minutes { 10 } + seconds { 30 }, true },
-                { jan / 30 / 2021, hours { 9 } + minutes { 10 } + seconds { 50 }, false },
+                { January / 30 / 2021, hours { 9 } + minutes { 10 } + seconds { 30 }, true },
+                { January / 30 / 2021, hours { 9 } + minutes { 10 } + seconds { 50 }, false },
             }),
         declareTest(
             "Rolling every hour precise",
             RollEvery { PreciseInterval { hours(1) }, FrozenClock {} },
             {
-                { jan / 29 / 2021, hours { 9 } + minutes { 10 } + seconds { 30 }, false },
-                { jan / 29 / 2021, hours { 9 } + minutes { 25 } + seconds { 10 }, false },
-                { jan / 29 / 2021, hours { 10 } + minutes { 5 } + seconds { 50 }, false },
+                { January / 29 / 2021, hours { 9 } + minutes { 10 } + seconds { 30 }, false },
+                { January / 29 / 2021, hours { 9 } + minutes { 25 } + seconds { 10 }, false },
+                { January / 29 / 2021, hours { 10 } + minutes { 5 } + seconds { 50 }, false },
                 // ROLL
-                { jan / 29 / 2021, hours { 10 } + minutes { 15 } + seconds { 30 }, true },
-                { jan / 29 / 2021, hours { 10 } + minutes { 30 } + seconds { 50 }, false },
-                { jan / 29 / 2021, hours { 10 } + minutes { 50 } + seconds { 50 }, false },
+                { January / 29 / 2021, hours { 10 } + minutes { 15 } + seconds { 30 }, true },
+                { January / 29 / 2021, hours { 10 } + minutes { 30 } + seconds { 50 }, false },
+                { January / 29 / 2021, hours { 10 } + minutes { 50 } + seconds { 50 }, false },
                 // ROLL
-                { jan / 29 / 2021, hours { 11 } + minutes { 20 } + seconds { 35 }, true },
-                { jan / 29 / 2021, hours { 11 } + minutes { 50 } + seconds { 35 }, false },
+                { January / 29 / 2021, hours { 11 } + minutes { 20 } + seconds { 35 }, true },
+                { January / 29 / 2021, hours { 11 } + minutes { 50 } + seconds { 35 }, false },
                 // ROLL
-                { jan / 30 / 2021, hours { 9 } + minutes { 10 } + seconds { 30 }, true },
+                { January / 30 / 2021, hours { 9 } + minutes { 10 } + seconds { 30 }, true },
             }),
         declareTest(
             "Rolling every day precise",
             RollEvery { PreciseInterval { days(1) }, FrozenClock {} },
             {
-                { jan / 29 / 2021, hours { 9 } + minutes { 10 } + seconds { 30 }, false },
-                { jan / 29 / 2021, hours { 9 } + minutes { 25 } + seconds { 10 }, false },
-                { jan / 29 / 2021, hours { 10 } + minutes { 5 } + seconds { 50 }, false },
+                { January / 29 / 2021, hours { 9 } + minutes { 10 } + seconds { 30 }, false },
+                { January / 29 / 2021, hours { 9 } + minutes { 25 } + seconds { 10 }, false },
+                { January / 29 / 2021, hours { 10 } + minutes { 5 } + seconds { 50 }, false },
                 // ROLL
-                { jan / 30 / 2021, hours { 10 } + minutes { 15 } + seconds { 30 }, true },
-                { jan / 30 / 2021, hours { 12 } + minutes { 30 } + seconds { 50 }, false },
-                { jan / 30 / 2021, hours { 18 } + minutes { 20 } + seconds { 50 }, false },
+                { January / 30 / 2021, hours { 10 } + minutes { 15 } + seconds { 30 }, true },
+                { January / 30 / 2021, hours { 12 } + minutes { 30 } + seconds { 50 }, false },
+                { January / 30 / 2021, hours { 18 } + minutes { 20 } + seconds { 50 }, false },
                 // ROLL
-                { feb / 1 / 2021, hours { 11 } + minutes { 10 } + seconds { 35 }, true },
-                { feb / 1 / 2021, hours { 12 } + minutes { 20 } + seconds { 35 }, false },
+                { February / 1 / 2021, hours { 11 } + minutes { 10 } + seconds { 35 }, true },
+                { February / 1 / 2021, hours { 12 } + minutes { 20 } + seconds { 35 }, false },
             }),
         declareTest(
             "Rolling every month precise",
-            RollEvery { PreciseInterval { date::months(1) }, FrozenClock {} },
+            RollEvery { PreciseInterval { std::chrono::months(1) }, FrozenClock {} },
             {
-                { jan / 1 / 2021, hours { 10 } + minutes { 20 } + seconds { 55 }, false },
-                { jan / 1 / 2021, hours { 20 } + minutes { 50 } + seconds { 35 }, false },
-                { jan / 8 / 2021, hours { 18 } + minutes { 30 } + seconds { 40 }, false },
+                { January / 1 / 2021, hours { 10 } + minutes { 20 } + seconds { 55 }, false },
+                { January / 1 / 2021, hours { 20 } + minutes { 50 } + seconds { 35 }, false },
+                { January / 8 / 2021, hours { 18 } + minutes { 30 } + seconds { 40 }, false },
                 // ROLL
-                { feb / 2 / 2021, hours { 1 } + minutes { 10 } + seconds { 15 }, true },
-                { feb / 15 / 2021, hours { 8 } + minutes { 20 } + seconds { 35 }, false },
-                { feb / 15 / 2021, hours { 18 } + minutes { 30 } + seconds { 35 }, false },
+                { February / 2 / 2021, hours { 1 } + minutes { 10 } + seconds { 15 }, true },
+                { February / 15 / 2021, hours { 8 } + minutes { 20 } + seconds { 35 }, false },
+                { February / 15 / 2021, hours { 18 } + minutes { 30 } + seconds { 35 }, false },
                 // ROLL
-                { mar / 5 / 2021, hours { 9 } + minutes { 30 } + seconds { 35 }, true },
-                { apr / 2 / 2021, hours { 15 } + minutes { 20 } + seconds { 40 }, false },
+                { March / 5 / 2021, hours { 9 } + minutes { 30 } + seconds { 35 }, true },
+                { April / 2 / 2021, hours { 15 } + minutes { 20 } + seconds { 40 }, false },
             }),
         declareTest(
             "Rolling every year precise",
-            RollEvery { PreciseInterval { date::years(1) }, FrozenClock {} },
+            RollEvery { PreciseInterval { std::chrono::years(1) }, FrozenClock {} },
             {
-                { jan / 3 / 2021, hours { 8 } + minutes { 15 } + seconds { 20 }, false },
-                { jan / 18 / 2021, hours { 7 } + minutes { 35 } + seconds { 20 }, false },
-                { feb / 10 / 2021, hours { 18 } + minutes { 40 } + seconds { 25 }, false },
-                { oct / 24 / 2021, hours { 16 } + minutes { 45 } + seconds { 30 }, false },
-                { jan / 2 / 2022, hours { 19 } + minutes { 20 } + seconds { 30 }, false },
+                { January / 3 / 2021, hours { 8 } + minutes { 15 } + seconds { 20 }, false },
+                { January / 18 / 2021, hours { 7 } + minutes { 35 } + seconds { 20 }, false },
+                { February / 10 / 2021, hours { 18 } + minutes { 40 } + seconds { 25 }, false },
+                { October / 24 / 2021, hours { 16 } + minutes { 45 } + seconds { 30 }, false },
+                { January / 2 / 2022, hours { 19 } + minutes { 20 } + seconds { 30 }, false },
                 // ROLL
-                { jan / 4 / 2022, hours { 6 } + minutes { 15 } + seconds { 50 }, true },
-                { may / 1 / 2022, hours { 16 } + minutes { 45 } + seconds { 10 }, false },
+                { January / 4 / 2022, hours { 6 } + minutes { 15 } + seconds { 50 }, true },
+                { May / 1 / 2022, hours { 16 } + minutes { 45 } + seconds { 10 }, false },
                 // ROLL
-                { feb / 1 / 2023, hours { 10 } + minutes { 10 } + seconds { 35 }, true },
-                { mar / 1 / 2023, hours { 15 } + minutes { 45 } + seconds { 30 }, false },
+                { February / 1 / 2023, hours { 10 } + minutes { 10 } + seconds { 35 }, true },
+                { March / 1 / 2023, hours { 15 } + minutes { 45 } + seconds { 30 }, false },
             }),
         declareTest(
             "Rolling every minute round",
             RollEvery { RoundInterval { minutes(1) }, FrozenClock {} },
             {
-                { jan / 29 / 2021, hours { 9 } + minutes { 10 } + seconds { 20 }, false },
-                { jan / 29 / 2021, hours { 9 } + minutes { 10 } + seconds { 50 }, false },
+                { January / 29 / 2021, hours { 9 } + minutes { 10 } + seconds { 20 }, false },
+                { January / 29 / 2021, hours { 9 } + minutes { 10 } + seconds { 50 }, false },
                 // ROLL
-                { jan / 29 / 2021, hours { 9 } + minutes { 11 } + seconds { 5 }, true },
-                { jan / 29 / 2021, hours { 9 } + minutes { 11 } + seconds { 35 }, false },
-                { jan / 29 / 2021, hours { 9 } + minutes { 11 } + seconds { 50 }, false },
+                { January / 29 / 2021, hours { 9 } + minutes { 11 } + seconds { 5 }, true },
+                { January / 29 / 2021, hours { 9 } + minutes { 11 } + seconds { 35 }, false },
+                { January / 29 / 2021, hours { 9 } + minutes { 11 } + seconds { 50 }, false },
                 // ROLL
-                { jan / 29 / 2021, hours { 9 } + minutes { 12 } + seconds { 30 }, true },
-                { jan / 29 / 2021, hours { 9 } + minutes { 12 } + seconds { 50 }, false },
+                { January / 29 / 2021, hours { 9 } + minutes { 12 } + seconds { 30 }, true },
+                { January / 29 / 2021, hours { 9 } + minutes { 12 } + seconds { 50 }, false },
                 // ROLL
-                { jan / 29 / 2021, hours { 10 } + minutes { 5 } + seconds { 10 }, true },
+                { January / 29 / 2021, hours { 10 } + minutes { 5 } + seconds { 10 }, true },
             }),
         declareTest(
             "Rolling every day round",
-            RollEvery { RoundInterval { date::days(1) }, FrozenClock {} },
+            RollEvery { RoundInterval { std::chrono::days(1) }, FrozenClock {} },
             {
-                { jan / 29 / 2021, hours { 9 } + minutes { 10 } + seconds { 20 }, false },
-                { jan / 29 / 2021, hours { 15 } + minutes { 25 } + seconds { 50 }, false },
+                { January / 29 / 2021, hours { 9 } + minutes { 10 } + seconds { 20 }, false },
+                { January / 29 / 2021, hours { 15 } + minutes { 25 } + seconds { 50 }, false },
                 // ROLL
-                { jan / 30 / 2021, hours { 6 } + minutes { 10 } + seconds { 50 }, true },
-                { jan / 30 / 2021, hours { 16 } + minutes { 30 } + seconds { 25 }, false },
-                { jan / 30 / 2021, hours { 22 } + minutes { 10 } + seconds { 25 }, false },
+                { January / 30 / 2021, hours { 6 } + minutes { 10 } + seconds { 50 }, true },
+                { January / 30 / 2021, hours { 16 } + minutes { 30 } + seconds { 25 }, false },
+                { January / 30 / 2021, hours { 22 } + minutes { 10 } + seconds { 25 }, false },
                 // ROLL
-                { feb / 2 / 2021, hours { 10 } + minutes { 35 } + seconds { 40 }, true },
-                { feb / 2 / 2021, hours { 12 } + minutes { 35 } + seconds { 45 }, false },
+                { February / 2 / 2021, hours { 10 } + minutes { 35 } + seconds { 40 }, true },
+                { February / 2 / 2021, hours { 12 } + minutes { 35 } + seconds { 45 }, false },
             }),
 
         declareTest(
             "Rolling every month round",
-            RollEvery { RoundInterval { date::months(1) }, FrozenClock {} },
+            RollEvery { RoundInterval { std::chrono::months(1) }, FrozenClock {} },
             {
-                { jan / 29 / 2021, hours { 9 } + minutes { 10 } + seconds { 30 }, false },
-                { jan / 29 / 2021, hours { 15 } + minutes { 35 } + seconds { 30 }, false },
-                { jan / 30 / 2021, hours { 18 } + minutes { 25 } + seconds { 50 }, false },
+                { January / 29 / 2021, hours { 9 } + minutes { 10 } + seconds { 30 }, false },
+                { January / 29 / 2021, hours { 15 } + minutes { 35 } + seconds { 30 }, false },
+                { January / 30 / 2021, hours { 18 } + minutes { 25 } + seconds { 50 }, false },
                 // ROLL
-                { feb / 1 / 2021, hours { 6 } + minutes { 10 } + seconds { 30 }, true },
-                { feb / 1 / 2021, hours { 16 } + minutes { 30 } + seconds { 55 }, false },
-                { feb / 7 / 2021, hours { 12 } + minutes { 35 } + seconds { 40 }, false },
+                { February / 1 / 2021, hours { 6 } + minutes { 10 } + seconds { 30 }, true },
+                { February / 1 / 2021, hours { 16 } + minutes { 30 } + seconds { 55 }, false },
+                { February / 7 / 2021, hours { 12 } + minutes { 35 } + seconds { 40 }, false },
                 // ROLL
-                { mar / 3 / 2021, hours { 1 } + minutes { 10 } + seconds { 30 }, true },
-                { mar / 30 / 2021, hours { 10 } + minutes { 20 } + seconds { 50 }, false },
+                { March / 3 / 2021, hours { 1 } + minutes { 10 } + seconds { 30 }, true },
+                { March / 30 / 2021, hours { 10 } + minutes { 20 } + seconds { 50 }, false },
             }),
         declareTest(
             "Rolling every year round",
-            RollEvery { RoundInterval { date::years(1) }, FrozenClock {} },
+            RollEvery { RoundInterval { std::chrono::years(1) }, FrozenClock {} },
             {
-                { jan / 3 / 2021, hours { 8 } + minutes { 15 } + seconds { 20 }, false },
-                { jan / 18 / 2021, hours { 7 } + minutes { 35 } + seconds { 20 }, false },
-                { feb / 10 / 2021, hours { 18 } + minutes { 40 } + seconds { 25 }, false },
-                { oct / 24 / 2021, hours { 16 } + minutes { 45 } + seconds { 30 }, false },
+                { January / 3 / 2021, hours { 8 } + minutes { 15 } + seconds { 20 }, false },
+                { January / 18 / 2021, hours { 7 } + minutes { 35 } + seconds { 20 }, false },
+                { February / 10 / 2021, hours { 18 } + minutes { 40 } + seconds { 25 }, false },
+                { October / 24 / 2021, hours { 16 } + minutes { 45 } + seconds { 30 }, false },
                 // ROLL
-                { jan / 2 / 2022, hours { 19 } + minutes { 20 } + seconds { 30 }, true },
-                { jan / 18 / 2022, hours { 6 } + minutes { 15 } + seconds { 50 }, false },
-                { may / 1 / 2022, hours { 16 } + minutes { 45 } + seconds { 10 }, false },
+                { January / 2 / 2022, hours { 19 } + minutes { 20 } + seconds { 30 }, true },
+                { January / 18 / 2022, hours { 6 } + minutes { 15 } + seconds { 50 }, false },
+                { May / 1 / 2022, hours { 16 } + minutes { 45 } + seconds { 10 }, false },
                 // ROLL
-                { feb / 1 / 2023, hours { 10 } + minutes { 10 } + seconds { 35 }, true },
-                { mar / 1 / 2023, hours { 15 } + minutes { 45 } + seconds { 30 }, false },
+                { February / 1 / 2023, hours { 10 } + minutes { 10 } + seconds { 35 }, true },
+                { March / 1 / 2023, hours { 15 } + minutes { 45 } + seconds { 30 }, false },
             })
 
     );
@@ -364,8 +367,8 @@ TEST(RollingOfstreamTests, should_roll_based_on_size)
 
 TEST(RollingOfstreamTests, should_archive_with_incrementing_number)
 {
-    auto ymd = jan / 23 / 2021;
-    auto now = date::sys_days { ymd };
+    auto ymd = January / 23 / 2021;
+    auto now = std::chrono::sys_days { ymd };
 
     ArchiveIncremental archive;
     temporary_rolling_filebuf fileBuf(std::ios_base::out, "logpptestfile", ".log");
@@ -448,8 +451,8 @@ TEST(RollingOfstreamTests, should_archive_with_timestamp)
         fileBuf.pubsync();
     };
 
-    auto ymd = jan / 23 / 2021;
-    auto now = date::sys_days { ymd } + hours { 9 } + minutes { 10 } + seconds { 35 };
+    auto ymd = January / 23 / 2021;
+    auto now = std::chrono::sys_days { ymd } + hours { 9 } + minutes { 10 } + seconds { 35 };
     FrozenTime::setNow(now);
 
     write("File0"sv);
@@ -487,7 +490,7 @@ TEST(RollingOfstreamTests, should_archive_with_timestamp)
 
 TEST(RollingOfstreamTests, should_archive_with_timestamp_and_fixed_offset)
 {
-    ArchiveTimestamp<FrozenTime, offset::Fixed<date::days>> archive { "%Y%m%d", date::days(-1) };
+    ArchiveTimestamp<FrozenTime, offset::Fixed<std::chrono::days>> archive { "%Y%m%d", std::chrono::days(-1) };
     temporary_rolling_filebuf fileBuf(std::ios_base::out, "logpptestfile", ".log");
 
     auto basePath = fileBuf.path();
@@ -502,8 +505,8 @@ TEST(RollingOfstreamTests, should_archive_with_timestamp_and_fixed_offset)
         fileBuf.pubsync();
     };
 
-    auto ymd = may / 13 / 2021;
-    auto now = date::sys_days { ymd } + hours { 9 } + minutes { 54 } + seconds { 35 };
+    auto ymd = May / 13 / 2021;
+    auto now = std::chrono::sys_days { ymd } + hours { 9 } + minutes { 54 } + seconds { 35 };
     FrozenTime::setNow(now);
 
     write("File0"sv);
@@ -555,8 +558,8 @@ TEST(RollingOfstreamTests, should_archive_with_incremental_if_timestamp_already_
         fileBuf.pubsync();
     };
 
-    auto ymd = jan / 23 / 2021;
-    auto now = date::sys_days { ymd };
+    auto ymd = January / 23 / 2021;
+    auto now = std::chrono::sys_days { ymd };
     FrozenTime::setNow(now);
 
     write("File0"sv);

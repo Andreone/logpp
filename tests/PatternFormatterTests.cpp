@@ -8,8 +8,10 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
+
 using namespace logpp;
-using namespace date;
+using namespace std::chrono;
 
 struct PatternFormatterTest : public ::testing::Test
 {
@@ -38,7 +40,7 @@ TEST_F(PatternFormatterTest, should_format_date)
 {
     setPattern("%Y-%m-%d");
 
-    auto ymd     = jan / 8 / 2021;
+    auto ymd     = January / 8 / 2021;
     TimePoint tp = sys_days(ymd);
 
     EventLogBuffer buffer;
@@ -51,13 +53,12 @@ TEST_F(PatternFormatterTest, should_format_date)
 
 TEST_F(PatternFormatterTest, should_format_time)
 {
-    using namespace std::chrono;
     setPattern("%H:%M:%S");
 
-    auto time = make_time(hours { 15 } + minutes { 20 } + seconds { 10 });
+    auto time = hours { 15 } + minutes { 20 } + seconds { 10 };
 
     EventLogBuffer buffer;
-    buffer.writeTime(TimePoint { seconds(time) });
+    buffer.writeTime(TimePoint { time });
 
     format("", LogLevel::Debug, buffer);
 
@@ -143,10 +144,9 @@ TEST_F(PatternFormatterTest, should_format_source_location)
 
 TEST_F(PatternFormatterTest, should_format_full)
 {
-    using namespace std::chrono;
     setPattern("%+");
 
-    auto ymd     = jan / 8 / 2021;
+    auto ymd     = January / 8 / 2021;
     TimePoint tp = sys_days(ymd) + hours { 15 } + minutes { 20 } + seconds { 10 };
 
     EventLogBuffer buffer;

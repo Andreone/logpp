@@ -25,7 +25,7 @@ jobs:
 
       - name: Fetch dependencies
         working-directory: ${{ github.workspace }}/build-config
-        run: conan install .. --output-folder=. -s compiler.cppstd=17 --build=missing
+        run: conan install .. --output-folder=. -s compiler.cppstd=20 --build=missing
 
       - name: Run CMake
         run: cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
@@ -56,34 +56,34 @@ jobs:
           # Static builds
 
           - compiler: gcc
-            cc: gcc-9
-            cxx: g++-9
-            packages: gcc-9 g++-9
+            cc: gcc-13
+            cxx: g++-13
+            packages: gcc-13 g++-13
             conan_args:
             artifact: logpp-linux-gcc-static
           - compiler: clang
-            cc: clang-10
-            cxx: clang++-10
-            packages: clang-10
+            cc: clang-18
+            cxx: clang++-18
+            packages: clang-18
             conan_args:
             artifact: logpp-linux-clang-static
 
           # Shared builds
 
           - compiler: gcc
-            cc: gcc-9
-            cxx: g++-9
-            packages: gcc-9 g++-9
+            cc: gcc-13
+            cxx: g++-13
+            packages: gcc-13 g++-13
             conan_args: -o "&:shared=True"
             artifact: logpp-linux-gcc-shared
           - compiler: clang
-            cc: clang-10
-            cxx: clang++-10
-            packages: clang-10
+            cc: clang-18
+            cxx: clang++-18
+            packages: clang-18
             conan_args: -o "&:shared=True"
             artifact: logpp-linux-clang-shared
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: build-${{ matrix.artifact }}
     env:
       CC: ${{ matrix.cc }}
@@ -106,12 +106,12 @@ jobs:
       - name: Fetch dependencies
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
-        run: conan install .. --output-folder=. -o "&:build_tests=True" ${{ matrix.conan_args }} -s compiler.cppstd=17 --build=missing
+        run: conan install .. --output-folder=. -o "&:build_tests=True" ${{ matrix.conan_args }} -s compiler.cppstd=20 --build=missing
 
       - name: Build
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
         shell: bash
-        run: conan build .. --output-folder=. -o "&:build_tests=True" ${{ matrix.conan_args }} -s compiler.cppstd=17
+        run: conan build .. --output-folder=. -o "&:build_tests=True" ${{ matrix.conan_args }} -s compiler.cppstd=20
 
       - name: Package
         working-directory: ${{ github.workspace }}/build-${{ matrix.artifact }}
@@ -150,11 +150,11 @@ jobs:
 
       - name: Fetch dependencies
         working-directory: ${{ github.workspace }}/build-windows-msvc
-        run: conan install .. --output-folder=. -o "&:build_tests=True" -s compiler.cppstd=17 --build=missing
+        run: conan install .. --output-folder=. -o "&:build_tests=True" -s compiler.cppstd=20 --build=missing
 
       - name: Build
         working-directory: ${{ github.workspace }}/build-windows-msvc
-        run: conan build .. --output-folder=. -o "&:build_tests=True" -s compiler.cppstd=17
+        run: conan build .. --output-folder=. -o "&:build_tests=True" -s compiler.cppstd=20
 
       - name: Package
         working-directory: ${{ github.workspace }}/build-windows-msvc

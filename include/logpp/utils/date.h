@@ -2,8 +2,8 @@
 
 #include "logpp/core/Clock.h"
 #include "logpp/core/config.h"
-#include "logpp/core/Date.h"
 
+#include <chrono>
 #include <time.h>
 
 namespace logpp
@@ -12,13 +12,13 @@ namespace logpp
     {
         inline auto time(TimePoint tp)
         {
-            auto dp = date::floor<date::days>(tp);
-            return date::make_time(tp - dp);
+            auto dp = std::chrono::floor<std::chrono::days>(tp);
+            return std::chrono::hh_mm_ss { tp - dp };
         }
 
-        inline date::year_month_day date(TimePoint tp)
+        inline std::chrono::year_month_day date(TimePoint tp)
         {
-            return { date::floor<date::days>(tp) };
+            return { std::chrono::floor<std::chrono::days>(tp) };
         }
 
         inline int year(TimePoint tp)
@@ -93,65 +93,64 @@ namespace logpp
             using is_duration_equal = std::ratio_equal<period<D1>, period<D2>>;
 
             template <typename D1, typename D2>
-            inline constexpr bool is_duration_equal_v
-                = is_duration_equal<D1, D2>::value;
+            inline constexpr bool is_duration_equal_v = is_duration_equal<D1, D2>::value;
 
             template <typename Clock, typename Dur>
             constexpr std::chrono::time_point<Clock, Dur> floor_month(const std::chrono::time_point<Clock, Dur>& tp)
             {
-                auto r = std::chrono::floor<date::days>(tp);
-                date::year_month_day ymd { r };
+                auto r = std::chrono::floor<std::chrono::days>(tp);
+                std::chrono::year_month_day ymd { r };
 
-                date::year_month_day firstOfMonth { ymd.year(), ymd.month(), date::day { 1 } };
-                return static_cast<date::sys_days>(firstOfMonth);
+                std::chrono::year_month_day firstOfMonth { ymd.year(), ymd.month(), std::chrono::day { 1 } };
+                return static_cast<std::chrono::sys_days>(firstOfMonth);
             }
 
             template <typename Clock, typename Dur>
             constexpr std::chrono::time_point<Clock, Dur> floor_year(const std::chrono::time_point<Clock, Dur>& tp)
             {
-                auto r = std::chrono::floor<date::days>(tp);
-                date::year_month_day ymd { r };
+                auto r = std::chrono::floor<std::chrono::days>(tp);
+                std::chrono::year_month_day ymd { r };
 
-                date::year_month_day firstOfYear { ymd.year(), date::January, date::day { 1 } };
-                return static_cast<date::sys_days>(firstOfYear);
+                std::chrono::year_month_day firstOfYear { ymd.year(), std::chrono::January, std::chrono::day { 1 } };
+                return static_cast<std::chrono::sys_days>(firstOfYear);
             }
 
             template <typename Clock, typename Dur>
             constexpr std::chrono::time_point<Clock, Dur> ceil_month(const std::chrono::time_point<Clock, Dur>& tp)
             {
-                auto r = std::chrono::floor<date::days>(tp);
-                date::year_month_day ymd { r };
+                auto r = std::chrono::floor<std::chrono::days>(tp);
+                std::chrono::year_month_day ymd { r };
 
                 auto m = ymd.month();
-                if (m == date::December)
-                    m = date::January;
+                if (m == std::chrono::December)
+                    m = std::chrono::January;
                 else
                     ++m;
 
-                date::year_month_day firstOfNextMonth { ymd.year(), m, date::day { 1 } };
-                return static_cast<date::sys_days>(firstOfNextMonth);
+                std::chrono::year_month_day firstOfNextMonth { ymd.year(), m, std::chrono::day { 1 } };
+                return static_cast<std::chrono::sys_days>(firstOfNextMonth);
             }
 
             template <typename Clock, typename Dur>
             constexpr std::chrono::time_point<Clock, Dur> ceil_year(const std::chrono::time_point<Clock, Dur>& tp)
             {
-                auto r = std::chrono::floor<date::days>(tp);
-                date::year_month_day ymd { r };
+                auto r = std::chrono::floor<std::chrono::days>(tp);
+                std::chrono::year_month_day ymd { r };
 
                 auto y = ymd.year();
                 ++y;
 
-                date::year_month_day firstOfNextYear { y, date::January, date::day { 1 } };
-                return static_cast<date::sys_days>(firstOfNextYear);
+                std::chrono::year_month_day firstOfNextYear { y, std::chrono::January, std::chrono::day { 1 } };
+                return static_cast<std::chrono::sys_days>(firstOfNextYear);
             }
         }
 
         template <class ToDuration, class Clock, class Duration>
         constexpr auto floor(const std::chrono::time_point<Clock, Duration>& tp)
         {
-            if constexpr (details::is_duration_equal_v<ToDuration, date::months>)
+            if constexpr (details::is_duration_equal_v<ToDuration, std::chrono::months>)
                 return details::floor_month(tp);
-            else if constexpr (details::is_duration_equal_v<ToDuration, date::years>)
+            else if constexpr (details::is_duration_equal_v<ToDuration, std::chrono::years>)
                 return details::floor_year(tp);
             else
                 return std::chrono::floor<ToDuration>(tp);
@@ -160,9 +159,9 @@ namespace logpp
         template <class ToDuration, class Clock, class Duration>
         constexpr auto ceil(const std::chrono::time_point<Clock, Duration>& tp)
         {
-            if constexpr (details::is_duration_equal_v<ToDuration, date::months>)
+            if constexpr (details::is_duration_equal_v<ToDuration, std::chrono::months>)
                 return details::ceil_month(tp);
-            else if constexpr (details::is_duration_equal_v<ToDuration, date::years>)
+            else if constexpr (details::is_duration_equal_v<ToDuration, std::chrono::years>)
                 return details::ceil_year(tp);
             else
                 return std::chrono::ceil<ToDuration>(tp);

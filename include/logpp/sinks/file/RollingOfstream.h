@@ -372,7 +372,7 @@ namespace logpp
             //
             // We only do that for periods > 1 day.
             static constexpr auto HasOffset
-                = std::ratio_greater_equal_v<Period, date::days::period>;
+                = std::ratio_greater_equal_v<Period, std::chrono::days::period>;
 
             if constexpr (HasOffset)
             {
@@ -396,7 +396,7 @@ namespace logpp
         static TimePoint local(TimePoint tp)
         {
             static constexpr auto HasOffset
-                = std::ratio_greater_equal_v<Period, date::days::period>;
+                = std::ratio_greater_equal_v<Period, std::chrono::days::period>;
 
             if constexpr (HasOffset)
             {

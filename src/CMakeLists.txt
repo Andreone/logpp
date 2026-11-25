@@ -17,11 +17,6 @@ set(SOURCE_FILES
 add_library(logpp ${SOURCE_FILES})
 add_library(logpp::logpp ALIAS logpp)
 
-if(LOGPP_USE_EXTERNAL_DATE)
-  target_compile_definitions(logpp PUBLIC LOGPP_USE_EXTERNAL_DATE=1)
-  target_link_libraries(logpp PUBLIC date::date)
-endif()
-
 include(ProcessorCount)
 ProcessorCount(LOGPP_CORES)
 if(NOT LOGPP_CORES EQUAL 0)
@@ -36,7 +31,7 @@ generate_export_header(logpp
 
 find_package(Threads REQUIRED)
 
-target_compile_features(logpp PUBLIC cxx_std_17)
+target_compile_features(logpp PUBLIC cxx_std_20)
 target_compile_options(logpp PRIVATE
   $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
     -pipe -march=native

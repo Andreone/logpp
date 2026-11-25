@@ -1,7 +1,5 @@
 #pragma once
 
-#include "logpp/core/Date.h"
-
 #include <chrono>
 
 namespace logpp

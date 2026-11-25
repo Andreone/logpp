@@ -1,4 +1,5 @@
 from conan import ConanFile
+from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain
 
 required_conan_version = ">=2.1"
@@ -19,6 +20,10 @@ class LogppConan(ConanFile):
     }
 
     exports_sources = "*"
+
+    def validate(self):
+        if self.settings.compiler.get_safe("cppstd"):
+            check_min_cppstd(self, "20")
 
     def build_requirements(self):
         if self.options.build_tests:

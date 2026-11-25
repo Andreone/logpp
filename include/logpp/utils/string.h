@@ -1,7 +1,5 @@
 #pragma once
 
-#include "logpp/core/Date.h"
-
 #include <algorithm>
 #include <chrono>
 #include <optional>
@@ -76,13 +74,13 @@ namespace logpp
                 onParsed(std::chrono::hours(value));
                 break;
             case 'd':
-                onParsed(date::days(value));
+                onParsed(std::chrono::days(value));
                 break;
             case 'M':
-                onParsed(date::months(value));
+                onParsed(std::chrono::months(value));
                 break;
             case 'y':
-                onParsed(date::years(value));
+                onParsed(std::chrono::years(value));
                 break;
             default:
                 return false;

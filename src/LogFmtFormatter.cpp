@@ -7,17 +7,14 @@
 #include "logpp/format/flag/NameFormatter.h"
 #include "logpp/format/flag/SourceLocationFormatter.h"
 #include "logpp/format/flag/TextFormatter.h"
-#include "logpp/format/flag/TimeZone.h"
 #include "logpp/format/flag/ThreadFormatter.h"
 #include "logpp/format/flag/TimeFormatter.h"
+#include "logpp/format/flag/TimeZone.h"
 
-#include "logpp/core/Clock.h"
 #include "logpp/core/LogFieldVisitor.h"
 
-#include "logpp/utils/date.h"
 #include "logpp/utils/thread.h"
 
-#include <chrono>
 #include <fmt/format.h>
 
 namespace logpp
@@ -64,7 +61,7 @@ namespace logpp
             : m_separator(std::move(separator))
         { }
 
-        MultiFlagFormatter(std::vector<std::shared_ptr<FlagFormatter>> flagFormatters, std::string separator = "")
+        explicit MultiFlagFormatter(std::vector<std::shared_ptr<FlagFormatter>> flagFormatters, std::string separator = "")
             : m_flagFormatters(std::move(flagFormatters))
             , m_separator(std::move(separator))
         { }
@@ -79,7 +76,7 @@ namespace logpp
         {
             auto proxy = std::make_shared<FlagFormatterProxy>(std::move(formatter));
 
-            const auto shouldPrefix = !m_separator.empty() && m_flagFormatters.size() > 0;
+            const auto shouldPrefix = !m_separator.empty() && !m_flagFormatters.empty();
             proxy->setPreFormat([=](std::string_view, LogLevel, const EventLogBuffer&, fmt::memory_buffer& out) {
                 if (shouldPrefix)
                     out.append(m_separator.data(), m_separator.data() + m_separator.size());
